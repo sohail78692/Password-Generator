@@ -1,5 +1,3 @@
-/* script.js */
-
 // Character sets
 const LOWER = "abcdefghijklmnopqrstuvwxyz";
 const UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -15,21 +13,22 @@ const el = {
   symbols: document.getElementById("symbols"),
   generate: document.getElementById("generate"),
   copy: document.getElementById("copy"),
-  password: document.getElementById("password"),
+  passwordInput: document.getElementById("passwordInput"),
+  toggleVisibility: document.getElementById("toggleVisibility"),
+  entropyText: document.getElementById("entropyText"),
   strength: document.getElementById("strength"),
   strengthText: document.getElementById("strengthText"),
 };
 
-// update length label
+// update slider display
 el.length.addEventListener("input", () => {
   el.lengthValue.textContent = el.length.value;
 });
 
-// helper: secure random int in [0, max)
+// secure random number
 function secureRandomInt(max) {
-  // Use Uint32, reject numbers that would bias the result
   const u32 = new Uint32Array(1);
-  const limit = Math.floor(0xFFFFFFFF / max) * max; // largest multiple of max <= 2^32-1
+  const limit = Math.floor(0xFFFFFFFF / max) * max;
   while (true) {
     crypto.getRandomValues(u32);
     const val = u32[0];
@@ -37,58 +36,61 @@ function secureRandomInt(max) {
   }
 }
 
-// generate password using secure RNG
+function pickRandom(str) {
+  return str.charAt(secureRandomInt(str.length));
+}
+
+// generate password
 function generatePassword(length, options) {
   let charset = "";
   const required = [];
 
-  if (options.lowercase) { charset += LOWER; required.push(pickRandomFrom(LOWER)); }
-  if (options.uppercase) { charset += UPPER; required.push(pickRandomFrom(UPPER)); }
-  if (options.numbers)   { charset += NUM; required.push(pickRandomFrom(NUM)); }
-  if (options.symbols)   { charset += SYMBOLS; required.push(pickRandomFrom(SYMBOLS)); }
+  if (options.lowercase) { charset += LOWER; required.push(pickRandom(LOWER)); }
+  if (options.uppercase) { charset += UPPER; required.push(pickRandom(UPPER)); }
+  if (options.numbers)   { charset += NUM; required.push(pickRandom(NUM)); }
+  if (options.symbols)   { charset += SYMBOLS; required.push(pickRandom(SYMBOLS)); }
 
   if (!charset) return "";
 
-  // fill with random chars
-  const out = [];
+  const result = [];
+
   for (let i = 0; i < length; i++) {
-    out.push(pickRandomFrom(charset));
+    result.push(pickRandom(charset));
   }
 
-  // ensure at least one of each selected type is present
-  for (let i = 0; i < required.length && i < out.length; i++) {
-    const pos = secureRandomInt(out.length);
-    out[pos] = required[i];
+  // ensure all categories appear
+  for (let i = 0; i < required.length && i < result.length; i++) {
+    const pos = secureRandomInt(result.length);
+    result[pos] = required[i];
   }
 
-  return out.join("");
+  return result.join("");
 }
 
-function pickRandomFrom(str) {
-  const idx = secureRandomInt(str.length);
-  return str.charAt(idx);
+// entropy = length * log2(charsetSize)
+function calcEntropy(length, options) {
+  let size = 0;
+  if (options.lowercase) size += 26;
+  if (options.uppercase) size += 26;
+  if (options.numbers) size += 10;
+  if (options.symbols) size += SYMBOLS.length;
+
+  return size ? length * Math.log2(size) : 0;
 }
 
-// estimate simple strength (0-4)
-function estimateStrength(pw, options) {
-  if (!pw) return 0;
-  // score by length and variety
-  let score = 0;
-  if (pw.length >= 8) score++;
-  if (pw.length >= 12) score++;
-  const variety = new Set(pw.split("")).size;
-  if (options.lowercase + options.uppercase + options.numbers + options.symbols >= 3) score++;
-  if (variety > Math.min(20, pw.length)) score++;
-  if (pw.length >= 20) score = Math.min(4, score + 1);
-  return Math.min(4, score);
+function estimateStrength(entropy) {
+  if (entropy < 28) return 0;
+  if (entropy < 36) return 1;
+  if (entropy < 60) return 2;
+  if (entropy < 128) return 3;
+  return 4;
 }
 
-// update UI strength meter & text
-function updateStrength(pw, options) {
-  const s = estimateStrength(pw, options);
-  el.strength.value = s;
-  const labels = ["Very weak","Weak","Okay","Strong","Very strong"];
-  el.strengthText.textContent = pw ? labels[s] : "";
+function updateStrength(entropy) {
+  const level = estimateStrength(entropy);
+  const labels = ["Very weak", "Weak", "Okay", "Strong", "Very strong"];
+  el.strength.value = level;
+  el.strengthText.textContent = labels[level];
 }
 
 el.generate.addEventListener("click", () => {
@@ -96,60 +98,46 @@ el.generate.addEventListener("click", () => {
   const options = {
     lowercase: el.lowercase.checked,
     uppercase: el.uppercase.checked,
-    numbers: el.numbers.checked,
-    symbols: el.symbols.checked,
+    numbers:   el.numbers.checked,
+    symbols:   el.symbols.checked,
   };
 
-  // basic validation
   if (!options.lowercase && !options.uppercase && !options.numbers && !options.symbols) {
     alert("Select at least one character type.");
     return;
   }
 
   const pw = generatePassword(length, options);
-  if (!pw) {
-    el.password.textContent = "";
-    el.copy.disabled = true;
-    updateStrength("", options);
-    return;
-  }
+  el.passwordInput.value = pw;
 
-  el.password.textContent = pw;
-  el.copy.disabled = false;
-  updateStrength(pw, options);
+  el.copy.disabled = pw.length === 0;
+
+  const entropy = calcEntropy(length, options);
+  el.entropyText.textContent = "Entropy: " + entropy.toFixed(2) + " bits";
+
+  updateStrength(entropy);
 });
 
+// copy to clipboard
 el.copy.addEventListener("click", async () => {
-  const text = el.password.textContent;
-  if (!text) return;
-  try {
-    await navigator.clipboard.writeText(text);
-    el.copy.textContent = "Copied!";
-    setTimeout(() => el.copy.textContent = "Copy", 1400);
-  } catch (err) {
-    // fallback: select and execCommand
-    const textarea = document.createElement("textarea");
-    textarea.value = text;
-    document.body.appendChild(textarea);
-    textarea.select();
-    try {
-      document.execCommand("copy");
-      el.copy.textContent = "Copied!";
-      setTimeout(() => el.copy.textContent = "Copy", 1400);
-    } catch (e) {
-      alert("Copy failed — please select and copy manually.");
-    }
-    document.body.removeChild(textarea);
+  await navigator.clipboard.writeText(el.passwordInput.value);
+  el.copy.textContent = "Copied!";
+  setTimeout(() => (el.copy.textContent = "Copy"), 1200);
+});
+
+// visibility toggle
+el.toggleVisibility.addEventListener("click", () => {
+  if (el.passwordInput.type === "password") {
+    el.passwordInput.type = "text";
+    el.toggleVisibility.textContent = "Hide";
+  } else {
+    el.passwordInput.type = "password";
+    el.toggleVisibility.textContent = "Show";
   }
 });
 
-// Initialize UI on load
+// init
 document.addEventListener("DOMContentLoaded", () => {
   el.lengthValue.textContent = el.length.value;
-  updateStrength("", {
-    lowercase: el.lowercase.checked,
-    uppercase: el.uppercase.checked,
-    numbers: el.numbers.checked,
-    symbols: el.symbols.checked,
-  });
+  el.copy.disabled = true;
 });

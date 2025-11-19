@@ -2,29 +2,34 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Secure Password Generator</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Password Generator</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="container" role="main">
+
+  <main class="container">
     <h1>Secure Password Generator</h1>
 
-    <section class="controls" aria-labelledby="controls-heading">
-      <h2 id="controls-heading" class="sr-only">Password options</h2>
+    <div class="controls">
 
-      <label class="row">
+      <div class="row">
         <span>Password length: <strong id="lengthValue">16</strong></span>
-        <input id="length" type="range" min="4" max="64" value="16" />
-      </label>
+        <input id="length" type="range" min="4" max="64" value="16">
+      </div>
 
       <fieldset class="row">
         <legend>Include</legend>
-        <label><input type="checkbox" id="lowercase" checked /> Lowercase (a–z)</label>
-        <label><input type="checkbox" id="uppercase" checked /> Uppercase (A–Z)</label>
-        <label><input type="checkbox" id="numbers" checked /> Numbers (0–9)</label>
-        <label><input type="checkbox" id="symbols" /> Symbols (!@#...)</label>
+        <label><input type="checkbox" id="lowercase" checked> Lowercase</label>
+        <label><input type="checkbox" id="uppercase" checked> Uppercase</label>
+        <label><input type="checkbox" id="numbers" checked> Numbers</label>
+        <label><input type="checkbox" id="symbols"> Symbols</label>
       </fieldset>
+
+      <div class="row password-row">
+        <input id="passwordInput" class="password" type="password" readonly>
+        <button id="toggleVisibility">Show</button>
+      </div>
 
       <div class="row buttons">
         <button id="generate">Generate Password</button>
@@ -32,18 +37,18 @@
       </div>
 
       <div class="row">
-        <label for="password" class="sr-only">Generated password</label>
-        <output id="password" class="password" aria-live="polite"></output>
+        <meter id="strength" min="0" max="4" value="0"></meter>
+        <span id="strengthText" class="strength-text"></span>
       </div>
 
       <div class="row">
-        <meter id="strength" min="0" max="4" value="0" title="Password strength"></meter>
-        <span id="strengthText" class="strength-text"></span>
+        <span id="entropyText" class="entropy-text"></span>
       </div>
-    </section>
+
+    </div>
 
     <footer>
-      <small>Built with <code>window.crypto.getRandomValues</code> for secure randomness.</small>
+      <small>Made with love ❤️ by Sohail Akhtar</small>
     </footer>
   </main>
 
