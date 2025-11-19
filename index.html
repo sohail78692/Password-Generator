@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Secure Password Generator</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="container" role="main">
+    <h1>Secure Password Generator</h1>
+
+    <section class="controls" aria-labelledby="controls-heading">
+      <h2 id="controls-heading" class="sr-only">Password options</h2>
+
+      <label class="row">
+        <span>Password length: <strong id="lengthValue">16</strong></span>
+        <input id="length" type="range" min="4" max="64" value="16" />
+      </label>
+
+      <fieldset class="row">
+        <legend>Include</legend>
+        <label><input type="checkbox" id="lowercase" checked /> Lowercase (a–z)</label>
+        <label><input type="checkbox" id="uppercase" checked /> Uppercase (A–Z)</label>
+        <label><input type="checkbox" id="numbers" checked /> Numbers (0–9)</label>
+        <label><input type="checkbox" id="symbols" /> Symbols (!@#...)</label>
+      </fieldset>
+
+      <div class="row buttons">
+        <button id="generate">Generate Password</button>
+        <button id="copy" disabled>Copy</button>
+      </div>
+
+      <div class="row">
+        <label for="password" class="sr-only">Generated password</label>
+        <output id="password" class="password" aria-live="polite"></output>
+      </div>
+
+      <div class="row">
+        <meter id="strength" min="0" max="4" value="0" title="Password strength"></meter>
+        <span id="strengthText" class="strength-text"></span>
+      </div>
+    </section>
+
+    <footer>
+      <small>Built with <code>window.crypto.getRandomValues</code> for secure randomness.</small>
+    </footer>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
