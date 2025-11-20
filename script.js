@@ -161,23 +161,37 @@ el.copy.addEventListener("click", async () => {
   try {
     await navigator.clipboard.writeText(text);
 
-    // Animation class
-    el.copy.classList.add("copy-animate");
-
-    // Button text change
+    // Change button text
     el.copy.textContent = "Copied!";
 
-    // Remove animation class after it runs
+    // Create flying checkmark element
+    const check = document.createElement("div");
+    check.textContent = "✔";
+    check.className = "checkmark-fly";
+
+    // Position checkmark above the copy button
+    const rect = el.copy.getBoundingClientRect();
+    const x = rect.width / 2 - 6; // center horizontally
+    check.style.left = `${x}px`;
+    check.style.top = `-4px`;
+
+    // Append to button container (which is relative)
+    el.copy.parentElement.appendChild(check);
+
+    // Remove animation element after it finishes
+    setTimeout(() => check.remove(), 900);
+
+    // Restore button
     setTimeout(() => {
-      el.copy.classList.remove("copy-animate");
       el.copy.textContent = "Copy";
-    }, 600);
+    }, 1100);
 
   } catch (err) {
-    console.error("Clipboard write failed:", err);
-    alert("Copy failed. You can copy manually.");
+    console.error("Clipboard error:", err);
+    alert("Failed to copy. Please select the password manually.");
   }
 });
+
 
 // visibility toggle
 el.toggleVisibility.addEventListener("click", () => {

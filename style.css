@@ -203,3 +203,34 @@ footer{
 .copy-animate {
   animation: copyPulse 0.35s ease-out;
 }
+
+/* Flying checkmark animation */
+.checkmark-fly {
+  position: absolute;
+  font-size: 1.2rem;
+  pointer-events: none;
+  animation: flyUp 0.9s ease-out forwards;
+  color: var(--accent);
+  text-shadow: 0 0 12px rgba(125,211,252,0.8);
+  z-index: 999;
+}
+
+@keyframes flyUp {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  70% {
+    opacity: 0.9;
+    transform: translateY(-25px) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-45px) scale(0.9);
+  }
+}
+
+/* Ensure the button container can position animations */
+.buttons {
+  position: relative;
+}
