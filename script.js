@@ -157,13 +157,25 @@ el.generate.addEventListener("click", () => {
 el.copy.addEventListener("click", async () => {
   const text = el.passwordInput.value;
   if (!text) return;
+
   try {
     await navigator.clipboard.writeText(text);
+
+    // Animation class
+    el.copy.classList.add("copy-animate");
+
+    // Button text change
     el.copy.textContent = "Copied!";
-    setTimeout(() => (el.copy.textContent = "Copy"), 1400);
+
+    // Remove animation class after it runs
+    setTimeout(() => {
+      el.copy.classList.remove("copy-animate");
+      el.copy.textContent = "Copy";
+    }, 600);
+
   } catch (err) {
     console.error("Clipboard write failed:", err);
-    alert("Copy failed. You can select and copy the password manually.");
+    alert("Copy failed. You can copy manually.");
   }
 });
 
